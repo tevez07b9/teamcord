@@ -5,9 +5,9 @@
   "port": 5432,
   "username": "postgres",
   "password": "123456",
-  "database": "boilerplate",
+  "database": "teamcord",
   "logging": true,
-  "synchronize": false,
+  "synchronize": true,
   "entities": ["src/entities/*.*"],
   "migrations": ["src/migrations/*.*"],
   "cli": {

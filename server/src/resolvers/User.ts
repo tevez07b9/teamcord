@@ -8,10 +8,13 @@ import {
   ObjectType,
   Query,
   Resolver,
+  UseMiddleware,
 } from "type-graphql";
 import { FieldError } from "./common/types";
 import { Context } from "../types";
 import argon2 from "argon2";
+import jwt from "jsonwebtoken";
+import { isAuthenticated } from "./middlewares/isAuthenticated";
 
 @InputType()
 export class RegisterInput {
@@ -38,8 +41,8 @@ class UserResponse {
 export class UserResolver {
   @Mutation(() => UserResponse)
   async register(
-    @Arg("options") options: RegisterInput,
-    @Ctx() { req }: Context
+    @Arg("options") options: RegisterInput
+    // @Ctx() { req }: Context
   ): Promise<UserResponse | undefined> {
     const hashedPassword = await argon2.hash(options.password);
     let user;
@@ -64,7 +67,15 @@ export class UserResolver {
     }
 
     if (user) {
-      req.session.userID = user.id;
+      // Create Token
+      const token = jwt.sign(
+        { user_id: user.id, email: user.email },
+        process.env.TOKEN_KEY as string,
+        { expiresIn: "2h" }
+      );
+
+      user.token = token;
+
       return { user };
     } else {
       return {
@@ -81,8 +92,8 @@ export class UserResolver {
   @Mutation(() => UserResponse)
   async login(
     @Arg("usernameOrEmail") usernameOrEmail: string,
-    @Arg("password") password: string,
-    @Ctx() { req }: Context
+    @Arg("password") password: string
+    // @Ctx() { req }: Context
   ): Promise<UserResponse | undefined> {
     const user = await User.findOne(
       usernameOrEmail.includes("@")
@@ -113,7 +124,16 @@ export class UserResolver {
       };
     }
 
-    req.session.userID = user.id;
+    // Create token
+    const token = jwt.sign(
+      { user_id: user.id, email: user.email },
+      process.env.TOKEN_KEY as string,
+      { expiresIn: "2h" }
+    );
+
+    user.token = token;
+
+    // req.session.userID = user.id;
 
     return {
       user,
@@ -121,12 +141,13 @@ export class UserResolver {
   }
 
   @Query(() => User, { nullable: true })
+  @UseMiddleware(isAuthenticated)
   me(@Ctx() { req }: Context) {
-    if (!req.session.userID) {
+    if (!req.user) {
       return null;
     }
 
-    return User.findOne(req.session.userID);
+    return User.findOne(req.user.user_id);
   }
 
   @Mutation(() => Boolean)
