@@ -13,7 +13,6 @@ import {
 import { FieldError } from "./common/types";
 import { Context } from "../types";
 import argon2 from "argon2";
-import jwt from "jsonwebtoken";
 import { isAuthenticated } from "./middlewares/isAuthenticated";
 
 @InputType()
@@ -41,8 +40,8 @@ class UserResponse {
 export class UserResolver {
   @Mutation(() => UserResponse)
   async register(
-    @Arg("options") options: RegisterInput
-    // @Ctx() { req }: Context
+    @Arg("options") options: RegisterInput,
+    @Ctx() { req }: Context
   ): Promise<UserResponse | undefined> {
     const hashedPassword = await argon2.hash(options.password);
     let user;
@@ -52,7 +51,7 @@ export class UserResolver {
         username: options.username,
         password: hashedPassword,
       }).save();
-    } catch (error) {
+    } catch (error: any) {
       if (error.code === "23505") {
         return {
           errors: [
@@ -67,15 +66,7 @@ export class UserResolver {
     }
 
     if (user) {
-      // Create Token
-      const token = jwt.sign(
-        { user_id: user.id, email: user.email },
-        process.env.TOKEN_KEY as string,
-        { expiresIn: "2h" }
-      );
-
-      user.token = token;
-
+      req.session.userID = user.id;
       return { user };
     } else {
       return {
@@ -92,8 +83,8 @@ export class UserResolver {
   @Mutation(() => UserResponse)
   async login(
     @Arg("usernameOrEmail") usernameOrEmail: string,
-    @Arg("password") password: string
-    // @Ctx() { req }: Context
+    @Arg("password") password: string,
+    @Ctx() { req }: Context
   ): Promise<UserResponse | undefined> {
     const user = await User.findOne(
       usernameOrEmail.includes("@")
@@ -124,16 +115,7 @@ export class UserResolver {
       };
     }
 
-    // Create token
-    const token = jwt.sign(
-      { user_id: user.id, email: user.email },
-      process.env.TOKEN_KEY as string,
-      { expiresIn: "2h" }
-    );
-
-    user.token = token;
-
-    // req.session.userID = user.id;
+    req.session.userID = user.id;
 
     return {
       user,
@@ -142,12 +124,12 @@ export class UserResolver {
 
   @Query(() => User, { nullable: true })
   @UseMiddleware(isAuthenticated)
-  me(@Ctx() { req }: Context) {
-    if (!req.user) {
+  me(@Ctx() { user }: Context) {
+    if (!user) {
       return null;
     }
 
-    return User.findOne(req.user.user_id);
+    return user;
   }
 
   @Mutation(() => Boolean)
@@ -160,7 +142,6 @@ export class UserResolver {
           resolve(false);
           return;
         }
-
         resolve(true);
       })
     );

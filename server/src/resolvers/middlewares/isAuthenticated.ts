@@ -1,24 +1,23 @@
-import { Context, UserContext } from "../../types";
+import { Context } from "../../types";
 import { MiddlewareFn } from "type-graphql";
-import jwt from "jsonwebtoken";
+import { User } from "../../entities/User";
 
-export const isAuthenticated: MiddlewareFn<Context> = ({ context }, next) => {
+export const isAuthenticated: MiddlewareFn<Context> = async (
+  { context },
+  next
+) => {
   const { req } = context;
-  let token: string =
-    req.body.token || req.query.token || req.headers.authorization;
 
-  if (!token) {
-    throw new Error("Token not found. Please provide a token");
+  if (!req?.session?.userID) {
+    throw new Error("Unauthorized Access");
   }
 
-  try {
-    if (token.includes("Bearer")) {
-      token = req.headers.authorization?.split("Bearer ")[1] || "";
-    }
-    const decoded = jwt.verify(token, process.env.TOKEN_KEY as string);
-    req.user = decoded as UserContext;
-    return next();
-  } catch (error) {
-    throw new Error("Unauthorized access, please login.");
+  const user = await User.findOne(req.session.userID);
+
+  if (!user) {
+    throw new Error("User not found.");
   }
+
+  context.user = user;
+  return next();
 };
