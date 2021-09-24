@@ -26,15 +26,11 @@ export class User extends BaseEntity {
   @Column()
   password: string;
 
-  @Field(() => String, { nullable: true })
-  @Column({ type: "text", nullable: true, default: "" })
-  token: string;
-
-  @Field(() => String)
+  @Field()
   @CreateDateColumn()
   createdAt: Date;
 
-  @Field(() => String)
+  @Field()
   @UpdateDateColumn()
   updatedAt: Date;
 }

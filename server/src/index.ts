@@ -2,9 +2,9 @@ import "reflect-metadata";
 import "dotenv-safe/config";
 import express from "express";
 import cors from "cors";
-// import Redis from "ioredis";
-// import session from "express-session";
-// import connectRedis from "connect-redis";
+import Redis from "ioredis";
+import session from "express-session";
+import connectRedis from "connect-redis";
 import { createConnection } from "typeorm";
 import { ApolloServer } from "apollo-server-express";
 import { buildSchema, Query, Resolver } from "type-graphql";
@@ -12,11 +12,11 @@ import { Context } from "./types";
 import { UserResolver } from "./resolvers/User";
 
 // Type for Session Object
-// declare module "express-session" {
-//   export interface SessionData {
-//     userID: number;
-//   }
-// }
+declare module "express-session" {
+  export interface SessionData {
+    userID: number;
+  }
+}
 
 @Resolver()
 class HelloResolver {
@@ -33,8 +33,8 @@ const main = async () => {
   const app = express();
 
   // Redis setup
-  // const RedisStore = connectRedis(session);
-  // const redis = new Redis();
+  const RedisStore = connectRedis(session);
+  const redis = new Redis();
 
   app.set("trust proxy", 1);
 
@@ -50,35 +50,36 @@ const main = async () => {
   );
 
   // Express session setup
-  // app.use(
-  //   session({
-  //     name: process.env.COOKIE_NAME,
-  //     store: new RedisStore({
-  //       client: redis,
-  //       disableTouch: true,
-  //     }),
-  //     cookie: {
-  //       maxAge: 1000 * 60 * 60 * 24,
-  //       httpOnly: false,
-  //       sameSite: "lax",
-  //       secure: false,
-  //     },
-  //     saveUninitialized: false,
-  //     secret: process.env.SESSION_SECRET as string,
-  //     resave: false,
-  //   })
-  // );
+  app.use(
+    session({
+      name: process.env.COOKIE_NAME,
+      store: new RedisStore({
+        client: redis,
+        disableTouch: true,
+      }),
+      cookie: {
+        maxAge: 1000 * 60 * 60 * 24,
+        httpOnly: false,
+        sameSite: "lax",
+        secure: false,
+      },
+      saveUninitialized: false,
+      secret: process.env.SESSION_SECRET as string,
+      resave: false,
+    })
+  );
 
   // Apollo server init
   const apolloServer = new ApolloServer({
     schema: await buildSchema({
       resolvers: [HelloResolver, UserResolver],
       validate: false,
+      dateScalarMode: "isoDate",
     }),
     context: ({ req, res }): Context => ({
       req,
       res,
-      // redis,
+      redis,
     }),
   });
 
