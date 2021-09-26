@@ -8,6 +8,7 @@ import {
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from "typeorm";
+import { Group } from "./Group";
 import { Server } from "./Server";
 
 @ObjectType()
@@ -32,6 +33,10 @@ export class User extends BaseEntity {
   @Field(() => [Server])
   @OneToMany(() => Server, (server) => server.owner)
   servers: Server[];
+
+  @Field(() => [Group])
+  @OneToMany(() => Group, (group) => group.owner)
+  groups: Group[];
 
   @Field()
   @CreateDateColumn()

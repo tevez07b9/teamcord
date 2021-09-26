@@ -11,6 +11,7 @@ import { buildSchema, Query, Resolver } from "type-graphql";
 import { Context } from "./types";
 import { UserResolver } from "./resolvers/User";
 import { ServerResolver } from "./resolvers/Server";
+import { GroupResolver } from "./resolvers/Group";
 
 // Type for Session Object
 declare module "express-session" {
@@ -73,7 +74,7 @@ const main = async () => {
   // Apollo server init
   const apolloServer = new ApolloServer({
     schema: await buildSchema({
-      resolvers: [HelloResolver, UserResolver, ServerResolver],
+      resolvers: [HelloResolver, UserResolver, ServerResolver, GroupResolver],
       validate: false,
       dateScalarMode: "isoDate",
     }),
