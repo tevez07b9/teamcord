@@ -10,6 +10,7 @@ import { ApolloServer } from "apollo-server-express";
 import { buildSchema, Query, Resolver } from "type-graphql";
 import { Context } from "./types";
 import { UserResolver } from "./resolvers/User";
+import { ServerResolver } from "./resolvers/Server";
 
 // Type for Session Object
 declare module "express-session" {
@@ -72,7 +73,7 @@ const main = async () => {
   // Apollo server init
   const apolloServer = new ApolloServer({
     schema: await buildSchema({
-      resolvers: [HelloResolver, UserResolver],
+      resolvers: [HelloResolver, UserResolver, ServerResolver],
       validate: false,
       dateScalarMode: "isoDate",
     }),

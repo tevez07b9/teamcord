@@ -4,34 +4,35 @@ import {
   Column,
   CreateDateColumn,
   Entity,
-  OneToMany,
+  ManyToOne,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from "typeorm";
-import { Server } from "./Server";
+import { User } from "./User";
 
 @ObjectType()
 @Entity()
-export class User extends BaseEntity {
+export class Server extends BaseEntity {
   @Field()
   @PrimaryGeneratedColumn()
   id: number;
 
   @Field()
-  @Column({ unique: true })
-  username: string;
+  @Column()
+  name: string;
 
   @Field()
-  @Column({ unique: true })
-  email: string;
-
   @Column()
-  password: string;
+  logo: string;
+
+  @Field(() => String, { nullable: true })
+  @Column()
+  description: string;
 
   // Relations
-  @Field(() => [Server])
-  @OneToMany(() => Server, (server) => server.owner)
-  servers: Server[];
+  @Field(() => User)
+  @ManyToOne(() => User, (user) => user.servers)
+  owner: User;
 
   @Field()
   @CreateDateColumn()
