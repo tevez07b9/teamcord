@@ -5,33 +5,27 @@ module.exports = {
   theme: {
     extend: {
       colors: {
-        blue: {
-          light: "#5865f2",
-          dark: "#4751c4",
+        brand: {
+          bright: "rgb(88, 101, 242)",
+          dark: "rgb(71, 82, 196)",
         },
-        gray: {
+        black: "#000000",
+        rgba: {
+          borderDark: "rgba(0,0,0,0.3)",
+          bgDark: "rgba(0,0,0,0.1)",
+        },
+        grey: {
+          light: "#b9bbbe",
           dark: "#36393f",
-        },
-        header: {
-          primary: "#fff",
-          secondary: "#b9bbbe",
-        },
-        input: {
-          dark: "rgba(0, 0, 0, 0.1)",
-          border: "rgba(0, 0, 0, 0.3)",
-        },
-        text: {
-          disabled: "#72767d",
         },
       },
       fontSize: {
         12: "12px",
-        14: "14px",
         16: "16px",
-        24: "24px",
       },
       borderRadius: {
-        input: "3px",
+        5: "5px",
+        3: "3px",
       },
     },
   },
